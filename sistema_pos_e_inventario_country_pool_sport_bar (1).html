@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COUNTRY POOL SPORT BAR - Sistema POS, Billar e Inventario</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#172033',
+                            900: '#0f172a',
+                            950: '#090d16',
+                        },
+                        emerald: {
+                            450: '#10b981',
+                            550: '#059669',
+                        },
+                        amber: {
+                            450: '#f59e0b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Personalización de Scrollbars y detalles neón */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #10b981;
+        }
+        .neon-border-emerald {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+        }
+        .neon-border-amber {
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-ticket-area, #print-ticket-area * {
+                visibility: visible;
+            }
+            #print-ticket-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm;
+                background: white !important;
+                color: black !important;
+                padding: 10px;
+                font-family: 'JetBrains Mono', monospace;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
+
+    <!-- ==================== HEADER / BARRA SUPERIOR ==================== -->
+    <header class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
+        <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
+            <!-- Logo y Datos Fiscales -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 border border-emerald-400/30">
+                    <span class="font-mono font-extrabold text-xl text-white tracking-tighter">🎱8</span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-lg sm:text-xl tracking-tight text-white">COUNTRY POOL <span class="text-emerald-400">SPORT BAR</span></h1>
+                        <span class="hidden md:inline-block text-[11px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">RIF: J-050766079-6</span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">Carrera 1 con esquina C. 6, Barquisimeto, Nueva Segovia</p>
+                </div>
+            </div>
+
+            <!-- Navegación Principal (Tabs) -->
+            <nav class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 order-3 lg:order-2 w-full lg:w-auto justify-around">
+                <button onclick="switchTab('pos')" id="tab-pos" class="tab-btn active flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-emerald-600 text-white shadow-md">
+                    <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                    <span>Punto de Venta</span>
+                </button>
+                <button onclick="switchTab('billiard')" id="tab-billiard" class="tab-btn flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white">
+                    <i data-lucide="timer" class="w-4 h-4"></i>
+                    <span>Mesas Billar</span>
+                    <span id="active-tables-badge" class="hidden bg-amber-500 text-slate-950 text-[10px] font-bold px-1.5 py-0.2 rounded-full">0</span>
+                </button>
+                <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white">
+                    <i data-lucide="packages" class="w-4 h-4"></i>
+                    <span>Inventario (162)</span>
+                </button>
+                <button onclick="switchTab('sales')" id="tab-sales" class="tab-btn flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-slate-400 hover:text-white">
+                    <i data-lucide="receipt" class="w-4 h-4"></i>
+                    <span>Caja y Ventas</span>
+                </button>
+            </nav>
+
+            <!-- Tasa de Cambio BCV / Paralelo -->
+            <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl order-2 lg:order-3">
+                <div class="text-right">
+                    <label for="exchange-rate-input" class="block text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Tasa Bs / $</label>
+                    <div class="flex items-center gap-1">
+                        <span class="text-amber-400 font-mono font-bold text-sm">Bs.</span>
+                        <input type="number" id="exchange-rate-input" step="0.01" min="1" value="65.50" onchange="updateExchangeRate(this.value)" class="w-20 bg-transparent text-white font-mono font-bold text-sm focus:outline-none focus:text-emerald-400 border-b border-slate-700 focus:border-emerald-500">
+                    </div>
+                </div>
+                <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-400"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-5">
+
+        <!-- ============================================================ -->
+        <!-- VISTA 1: PUNTO DE VENTA (POS) Y CUENTAS POR MESA             -->
+        <!-- ============================================================ -->
+        <section id="view-pos" class="view-section grid grid-cols-1 lg:grid-cols-12 gap-5">
+            
+            <!-- Columna Izquierda (8 cols): Selector de Mesas + Catálogo -->
+            <div class="lg:col-span-8 flex flex-col gap-4">
+                
+                <!-- Selector Rápido de Mesas -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5">
+                    <div class="flex items-center justify-between mb-2.5">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                            <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-emerald-400"></i>
+                            Seleccionar Mesa / Cuenta Activa
+                        </span>
+                        <span class="text-xs text-slate-400">Punto verde = Cuenta abierta</span>
+                    </div>
+                    <div id="tables-selector-grid" class="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-9 gap-2">
+                        <!-- Renderizado dinámico por JS -->
+                    </div>
+                </div>
+
+                <!-- Buscador y Filtro de Categorías -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex flex-col gap-3">
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-1">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" id="pos-search-input" oninput="renderPosCatalog()" placeholder="Buscar producto por nombre o categoría (ej. Polar, Cacique, Tequeños, Billar)..." class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none">
+                            <button onclick="document.getElementById('pos-search-input').value=''; renderPosCatalog();" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs">Limpiar</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-2 text-xs text-slate-300 bg-slate-950 border border-slate-800 px-3 py-2.5 rounded-xl cursor-pointer select-none">
+                                <input type="checkbox" id="pos-only-stock" onchange="renderPosCatalog()" class="rounded text-emerald-500 focus:ring-0 bg-slate-800 border-slate-600">
+                                <span>Solo con stock en Barra</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Pills de Categorías -->
+                    <div id="pos-categories-bar" class="flex items-center gap-2 overflow-x-auto pb-1">
+                        <!-- Renderizado dinámico por JS -->
+                    </div>
+                </div>
+
+                <!-- Cuadrícula de Productos -->
+                <div id="pos-products-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[600px] overflow-y-auto pr-1">
+                    <!-- Renderizado dinámico por JS -->
+                </div>
+            </div>
+
+            <!-- Columna Derecha (4 cols): Cuenta / Ticket de la Mesa Seleccionada -->
+            <div class="lg:col-span-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sticky top-20 flex flex-col h-[calc(100vh-110px)] min-h-[540px] neon-border-emerald">
+                    
+                    <!-- Cabecera de la Cuenta -->
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                        <div>
+                            <span class="text-[11px] uppercase tracking-wider text-emerald-400 font-bold">Cuenta Actual</span>
+                            <h2 id="current-table-title" class="text-xl font-extrabold text-white flex items-center gap-2">
+                                MESA 1
+                            </h2>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button onclick="printPreCheck()" title="Imprimir Pre-Cuenta" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors">
+                                <i data-lucide="printer" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="clearCurrentTableOrder()" title="Vaciar Cuenta" class="p-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-xl transition-colors">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Ítems en el Carrito -->
+                    <div id="cart-items-container" class="flex-1 overflow-y-auto py-3 space-y-2.5">
+                        <!-- Renderizado dinámico por JS -->
+                    </div>
+
+                    <!-- Totales y Botón de Cobro -->
+                    <div class="pt-3 border-t border-slate-800 space-y-3">
+                        <div class="space-y-1 text-sm">
+                            <div class="flex justify-between text-slate-400">
+                                <span>Ítems en cuenta:</span>
+                                <span id="cart-total-items" class="font-mono font-semibold text-white">0</span>
+                            </div>
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-slate-300 font-semibold">TOTAL USD ($):</span>
+                                <span id="cart-total-usd" class="font-mono text-2xl font-extrabold text-emerald-400">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-baseline">
+                                <span class="text-slate-400 text-xs">TOTAL BOLÍVARES:</span>
+                                <span id="cart-total-bs" class="font-mono text-base font-bold text-amber-400">Bs. 0.00</span>
+                            </div>
+                        </div>
+
+                        <!-- Método de Pago -->
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button type="button" onclick="selectPaymentMethod('Efectivo USD')" class="pay-method-btn active text-xs py-2 px-2 rounded-lg border border-emerald-500 bg-emerald-500/20 text-emerald-300 font-semibold">💵 Divisas $</button>
+                            <button type="button" onclick="selectPaymentMethod('Pago Móvil / Bs')" class="pay-method-btn text-xs py-2 px-2 rounded-lg border border-slate-700 bg-slate-950 text-slate-400 hover:text-white font-semibold">📱 Pago Móvil</button>
+                            <button type="button" onclick="selectPaymentMethod('Punto / Zelle')" class="pay-method-btn text-xs py-2 px-2 rounded-lg border border-slate-700 bg-slate-950 text-slate-400 hover:text-white font-semibold">💳 Punto/Zelle</button>
+                        </div>
+
+                        <button onclick="checkoutCurrentTable()" id="btn-checkout" class="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-extrabold rounded-xl shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-wide cursor-pointer">
+                            <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                            <span>Cobrar y Cerrar Cuenta</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- VISTA 2: CONTROL DE MESAS DE BILLAR (CRONÓMETRO EN VIVO)     -->
+        <!-- ============================================================ -->
+        <section id="view-billiard" class="view-section hidden space-y-5">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
+                        <span class="text-2xl">🎱</span> Control de Mesas de Billar y Sala VIP
+                    </h2>
+                    <p class="text-xs text-slate-400">Cronómetro en tiempo real con cálculo automático ($10.00 / Hora — $5.00 / 30 Min) y envío directo a la cuenta de la mesa.</p>
+                </div>
+                <div class="flex items-center gap-3 bg-slate-950 border border-slate-800 px-4 py-2 rounded-xl">
+                    <span class="text-xs text-slate-400">Tarifa Estándar:</span>
+                    <span class="font-mono font-bold text-amber-400">$10.00 / hora ($0.1667 / min)</span>
+                </div>
+            </div>
+
+            <div id="billiard-tables-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- Renderizado dinámico de BILLAR 1, BILLAR 2, BILLAR 3, BILLAR 4 y MESA VIP -->
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- VISTA 3: GESTIÓN DE INVENTARIO (BARRA Y ALMACÉN - 162 ITEMS) -->
+        <!-- ============================================================ -->
+        <section id="view-inventory" class="view-section hidden space-y-5">
+            
+            <!-- Resumen Superior del Inventario -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <span class="text-xs text-slate-400 font-medium">Total Productos</span>
+                    <div id="inv-stat-total" class="text-2xl font-extrabold text-white font-mono mt-1">162</div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <span class="text-xs text-slate-400 font-medium">Unidades en Barra</span>
+                    <div id="inv-stat-barra" class="text-2xl font-extrabold text-emerald-400 font-mono mt-1">0</div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <span class="text-xs text-slate-400 font-medium">Unidades en Almacén</span>
+                    <div id="inv-stat-almacen" class="text-2xl font-extrabold text-amber-400 font-mono mt-1">0</div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                    <span class="text-xs text-slate-400 font-medium">Alertas Stock Bajo Barra (&le;5)</span>
+                    <div id="inv-stat-low" class="text-2xl font-extrabold text-rose-400 font-mono mt-1">0</div>
+                </div>
+            </div>
+
+            <!-- Barra de Herramientas del Inventario -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                    <div class="relative flex-1">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="inv-search-input" oninput="renderInventoryTable()" placeholder="Filtrar inventario por nombre o categoría..." class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none">
+                    </div>
+                    <select id="inv-category-filter" onchange="renderInventoryTable()" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                        <option value="ALL">Todas las Categorías</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="openAddProductModal()" class="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition-colors">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Nuevo Producto</span>
+                    </button>
+                    <button onclick="exportInventoryCSV()" class="flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-colors">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Exportar CSV / Excel</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla Completa Editable -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto max-h-[620px]">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-950 sticky top-0 z-10 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                            <tr>
+                                <th class="py-3 px-4">#</th>
+                                <th class="py-3 px-4">Producto</th>
+                                <th class="py-3 px-4">Categoría</th>
+                                <th class="py-3 px-4 text-right">Precio ($)</th>
+                                <th class="py-3 px-4 text-center">Stock Barra</th>
+                                <th class="py-3 px-4 text-center">Stock Almacén</th>
+                                <th class="py-3 px-4 text-center">Transferir Almacén &rarr; Barra</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body" class="divide-y divide-slate-800/70 text-sm">
+                            <!-- Renderizado dinámico por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- VISTA 4: HISTORIAL DE VENTAS Y CIERRE DE CAJA                -->
+        <!-- ============================================================ -->
+        <section id="view-sales" class="view-section hidden space-y-5">
+            
+            <!-- KPIs de Caja -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 neon-border-emerald">
+                    <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">Total Recaudado (USD)</span>
+                    <div id="sales-total-usd" class="text-3xl font-extrabold text-emerald-400 font-mono mt-1">$0.00</div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 neon-border-amber">
+                    <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">Total Recaudado (Bolívares)</span>
+                    <div id="sales-total-bs" class="text-3xl font-extrabold text-amber-400 font-mono mt-1">Bs. 0.00</div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">Tickets Cerrados</span>
+                    <div id="sales-total-count" class="text-3xl font-extrabold text-white font-mono mt-1">0</div>
+                </div>
+            </div>
+
+            <!-- Controles de Respaldo y Reinicio -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h3 class="font-bold text-white">Historial de Ventas Cerradas</h3>
+                    <p class="text-xs text-slate-400">Todos los datos se guardan automáticamente en este navegador (localStorage).</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="backupDataJSON()" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-colors">
+                        <i data-lucide="save" class="w-4 h-4 text-emerald-400"></i>
+                        <span>Respaldar Todo (JSON)</span>
+                    </button>
+                    <label class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-colors cursor-pointer">
+                        <i data-lucide="upload" class="w-4 h-4 text-amber-400"></i>
+                        <span>Restaurar JSON</span>
+                        <input type="file" accept=".json" onchange="restoreDataJSON(event)" class="hidden">
+                    </label>
+                    <button onclick="openResetConfirmModal()" class="flex items-center gap-1.5 bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-xs font-bold px-3.5 py-2.5 rounded-xl transition-colors">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        <span>Reiniciar Sistema de Fábrica</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Listado de Tickets -->
+            <div id="sales-history-list" class="space-y-3">
+                <!-- Renderizado dinámico por JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== MODAL: AGREGAR NUEVO PRODUCTO ==================== -->
+    <div id="modal-add-product" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-extrabold text-white">Agregar Nuevo Producto</h3>
+                <button onclick="closeAddProductModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="saveNewProduct(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Nombre del Producto</label>
+                    <input type="text" id="new-prod-name" required placeholder="Ej. CERVEZA SOLERA VERDE BOTELLA" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">Categoría</label>
+                    <select id="new-prod-category" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none">
+                        <!-- Opciones llenadas dinámicamente -->
+                    </select>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Precio ($)</label>
+                        <input type="number" id="new-prod-price" step="0.01" min="0" required value="1.50" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Stock Barra</label>
+                        <input type="number" id="new-prod-barra" min="0" required value="24" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Stock Almacén</label>
+                        <input type="number" id="new-prod-almacen" min="0" required value="48" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-emerald-500 focus:outline-none">
+                    </div>
+                </div>
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeAddProductModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-500">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: CONFIRMACIÓN PERSONALIZADA (SIN ALERT/CONFIRM) ==================== -->
+    <div id="modal-confirm" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl">
+            <h3 id="confirm-title" class="text-lg font-extrabold text-white">Confirmar Acción</h3>
+            <p id="confirm-message" class="text-sm text-slate-300">¿Estás seguro de continuar?</p>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700">Cancelar</button>
+                <button id="confirm-action-btn" class="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-500">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: TICKET / RECIBO IMPRIMIBLE ==================== -->
+    <div id="modal-ticket" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Comprobante de Consumo</span>
+                <button onclick="closeTicketModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <!-- Área Imprimible -->
+            <div id="print-ticket-area" class="bg-white text-slate-900 p-4 rounded-xl font-mono text-xs space-y-2 shadow-inner">
+                <div class="text-center border-b border-dashed border-slate-400 pb-2">
+                    <div class="font-extrabold text-sm">COUNTRY POOL SPORT BAR</div>
+                    <div>RIF: J-050766079-6</div>
+                    <div class="text-[10px]">Carrera 1 con esquina C. 6</div>
+                    <div class="text-[10px]">Barquisimeto, Nueva Segovia</div>
+                </div>
+                <div id="ticket-meta" class="text-[11px] border-b border-dashed border-slate-400 pb-2 space-y-0.5">
+                    <!-- Fecha, Mesa, Ticket # -->
+                </div>
+                <div id="ticket-items" class="space-y-1 border-b border-dashed border-slate-400 pb-2">
+                    <!-- Ítems -->
+                </div>
+                <div id="ticket-totals" class="space-y-1 font-bold text-right">
+                    <!-- Totales USD y Bs -->
+                </div>
+                <div class="text-center text-[10px] pt-2 text-slate-600">
+                    ¡Gracias por su visita!<br>Disfrute el mejor ambiente de Barquisimeto
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2">
+                    <i data-lucide="printer" class="w-4 h-4"></i> Imprimir Ticket
+                </button>
+                <button onclick="closeTicketModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== TOAST DE NOTIFICACIONES ==================== -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- ==================== LÓGICA JAVASCRIPT Y BASE DE DATOS DE 162 PRODUCTOS ==================== -->
+    <script>
+        // =========================================================================
+        // 1. BASE DE DATOS INICIAL: TODOS LOS 162 PRODUCTOS DE LA PLANTILLA
+        // =========================================================================
+        const INITIAL_PRODUCTS = [
+            // CERVEZA (1 - 24)
+            { id: 1, name: "CERVEZA POLAR PILSEN TERCIO (BOTELLA)", category: "CERVEZA", price: 1.50, stockBarra: 120, stockAlmacen: 240 },
+            { id: 2, name: "CERVEZA POLAR LIGHT TERCIO (BOTELLA)", category: "CERVEZA", price: 1.50, stockBarra: 144, stockAlmacen: 360 },
+            { id: 3, name: "CERVEZA ZULIA TERCIO (BOTELLA)", category: "CERVEZA", price: 1.50, stockBarra: 96, stockAlmacen: 192 },
+            { id: 4, name: "CERVEZA SOLERA AZUL TERCIO (BOTELLA)", category: "CERVEZA", price: 1.80, stockBarra: 72, stockAlmacen: 144 },
+            { id: 5, name: "CERVEZA SOLERA VERDE TERCIO (BOTELLA)", category: "CERVEZA", price: 1.80, stockBarra: 72, stockAlmacen: 144 },
+            { id: 6, name: "CERVEZA SOLERA IPA TERCIO (BOTELLA)", category: "CERVEZA", price: 2.00, stockBarra: 48, stockAlmacen: 72 },
+            { id: 7, name: "CERVEZA SOLERA MARZEN TERCIO (BOTELLA)", category: "CERVEZA", price: 2.00, stockBarra: 36, stockAlmacen: 72 },
+            { id: 8, name: "CERVEZA POLAR PILSEN LATA 355ML", category: "CERVEZA", price: 1.80, stockBarra: 48, stockAlmacen: 96 },
+            { id: 9, name: "CERVEZA POLAR LIGHT LATA 355ML", category: "CERVEZA", price: 1.80, stockBarra: 48, stockAlmacen: 96 },
+            { id: 10, name: "CERVEZA ZULIA LATA 355ML", category: "CERVEZA", price: 1.80, stockBarra: 36, stockAlmacen: 72 },
+            { id: 11, name: "CERVEZA SOLERA VERDE LATA 355ML", category: "CERVEZA", price: 2.00, stockBarra: 36, stockAlmacen: 72 },
+            { id: 12, name: "CERVEZA SOLERA AZUL LATA 355ML", category: "CERVEZA", price: 2.00, stockBarra: 36, stockAlmacen: 72 },
+            { id: 13, name: "CERVEZA CORONA EXTRA 355ML", category: "CERVEZA", price: 3.50, stockBarra: 48, stockAlmacen: 96 },
+            { id: 14, name: "CERVEZA HEINEKEN BOTELLA 330ML", category: "CERVEZA", price: 3.50, stockBarra: 36, stockAlmacen: 72 },
+            { id: 15, name: "CERVEZA STELLA ARTOIS BOTELLA 330ML", category: "CERVEZA", price: 3.50, stockBarra: 24, stockAlmacen: 48 },
+            { id: 16, name: "CERVEZA BUDWEISER BOTELLA 355ML", category: "CERVEZA", price: 3.00, stockBarra: 24, stockAlmacen: 48 },
+            { id: 17, name: "CERVEZA MODELO ESPECIAL 355ML", category: "CERVEZA", price: 3.50, stockBarra: 24, stockAlmacen: 48 },
+            { id: 18, name: "CERVEZA SMIRNOFF ICE ORIGINAL", category: "CERVEZA", price: 3.50, stockBarra: 36, stockAlmacen: 72 },
+            { id: 19, name: "CERVEZA SMIRNOFF ICE GREEN APPLE", category: "CERVEZA", price: 3.50, stockBarra: 36, stockAlmacen: 72 },
+            { id: 20, name: "TOBO DE CERVEZA NACIONAL (10 UNIDADES)", category: "CERVEZA", price: 13.50, stockBarra: 30, stockAlmacen: 50 },
+            { id: 21, name: "TOBO DE CERVEZA SOLERA (10 UNIDADES)", category: "CERVEZA", price: 16.00, stockBarra: 20, stockAlmacen: 40 },
+            { id: 22, name: "TOBO DE CERVEZA IMPORTADA (6 UNIDADES)", category: "CERVEZA", price: 19.00, stockBarra: 15, stockAlmacen: 30 },
+            { id: 23, name: "MICHELADA CLÁSICA (VASO PREPARADO)", category: "CERVEZA", price: 1.50, stockBarra: 50, stockAlmacen: 100 },
+            { id: 24, name: "MICHELADA CON MANGO / TAMARINDO", category: "CERVEZA", price: 2.00, stockBarra: 40, stockAlmacen: 80 },
+
+            // BEBIDAS Y SNACKS (25 - 48)
+            { id: 25, name: "AGUA MINERAL MALTIN / MINALBA 355ML", category: "BEBIDAS Y SNACKS", price: 1.00, stockBarra: 60, stockAlmacen: 120 },
+            { id: 26, name: "AGUA MINERAL CON GAS 355ML", category: "BEBIDAS Y SNACKS", price: 1.50, stockBarra: 24, stockAlmacen: 48 },
+            { id: 27, name: "REFRESCO PEPSI LATA 355ML", category: "BEBIDAS Y SNACKS", price: 1.50, stockBarra: 48, stockAlmacen: 96 },
+            { id: 28, name: "REFRESCO COCA-COLA LATA 355ML", category: "BEBIDAS Y SNACKS", price: 1.50, stockBarra: 48, stockAlmacen: 96 },
+            { id: 29, name: "REFRESCO 7UP / CHINOTTO LATA 355ML", category: "BEBIDAS Y SNACKS", price: 1.50, stockBarra: 36, stockAlmacen: 72 },
+            { id: 30, name: "REFRESCO FRESCOLITA LATA 355ML", category: "BEBIDAS Y SNACKS", price: 1.50, stockBarra: 36, stockAlmacen: 72 },
+            { id: 31, name: "REFRESCO 1.5 LITROS (PEPSI / COCA-COLA)", category: "BEBIDAS Y SNACKS", price: 3.00, stockBarra: 24, stockAlmacen: 48 },
+            { id: 32, name: "SODA / AGUA TÓNICA EVERVESS 355ML", category: "BEBIDAS Y SNACKS", price: 1.50, stockBarra: 48, stockAlmacen: 96 },
+            { id: 33, name: "MALTÍN POLAR BOTELLA / LATA", category: "BEBIDAS Y SNACKS", price: 1.50, stockBarra: 36, stockAlmacen: 72 },
+            { id: 34, name: "BEBIDA ENERGIZANTE RED BULL 250ML", category: "BEBIDAS Y SNACKS", price: 3.50, stockBarra: 36, stockAlmacen: 72 },
+            { id: 35, name: "BEBIDA ENERGIZANTE MONSTER 473ML", category: "BEBIDAS Y SNACKS", price: 4.00, stockBarra: 24, stockAlmacen: 48 },
+            { id: 36, name: "GATORADE 500ML (VARIOS SABORES)", category: "BEBIDAS Y SNACKS", price: 2.50, stockBarra: 24, stockAlmacen: 48 },
+            { id: 37, name: "JUGO YUKERY / NATURAL VASO", category: "BEBIDAS Y SNACKS", price: 2.00, stockBarra: 30, stockAlmacen: 60 },
+            { id: 38, name: "PAPAS RUFFLES / LAYS GRANDES", category: "BEBIDAS Y SNACKS", price: 3.00, stockBarra: 20, stockAlmacen: 40 },
+            { id: 39, name: "DORITOS MEGA QUESO GRANDE", category: "BEBIDAS Y SNACKS", price: 3.00, stockBarra: 20, stockAlmacen: 40 },
+            { id: 40, name: "PEPITO / CHEETOS GRANDE", category: "BEBIDAS Y SNACKS", price: 2.50, stockBarra: 20, stockAlmacen: 40 },
+            { id: 41, name: "PRINGLES ORIGINAL / CREMA Y CEBOLLA", category: "BEBIDAS Y SNACKS", price: 4.50, stockBarra: 18, stockAlmacen: 36 },
+            { id: 42, name: "MANÍ SALADO / JAPONÉS (PAQUETE)", category: "BEBIDAS Y SNACKS", price: 1.50, stockBarra: 30, stockAlmacen: 60 },
+            { id: 43, name: "PISTACHOS SALADOS (BOLSA)", category: "BEBIDAS Y SNACKS", price: 5.00, stockBarra: 15, stockAlmacen: 30 },
+            { id: 44, name: "CHOCOLATE SAVOY CRICRI / CARRÉ", category: "BEBIDAS Y SNACKS", price: 2.00, stockBarra: 24, stockAlmacen: 48 },
+            { id: 45, name: "CHICLES TRIDENT / HALLS", category: "BEBIDAS Y SNACKS", price: 1.00, stockBarra: 40, stockAlmacen: 80 },
+            { id: 46, name: "CAFÉ ESPRESSO / AMERICANO", category: "BEBIDAS Y SNACKS", price: 1.50, stockBarra: 50, stockAlmacen: 100 },
+            { id: 47, name: "CAFÉ CON LECHE / MOCACCINO", category: "BEBIDAS Y SNACKS", price: 2.00, stockBarra: 50, stockAlmacen: 100 },
+            { id: 48, name: "LIMONADA FRAPPÉ / HIERBABUENA", category: "BEBIDAS Y SNACKS", price: 3.00, stockBarra: 40, stockAlmacen: 80 },
+
+            // CÓCTELES (49 - 68)
+            { id: 49, name: "MOJITO CUBANO CLÁSICO", category: "CÓCTELES", price: 5.00, stockBarra: 50, stockAlmacen: 100 },
+            { id: 50, name: "MOJITO DE FRESA / PARCHITA", category: "CÓCTELES", price: 5.50, stockBarra: 50, stockAlmacen: 100 },
+            { id: 51, name: "CUBA LIBRE (RON AÑEJO)", category: "CÓCTELES", price: 4.50, stockBarra: 50, stockAlmacen: 100 },
+            { id: 52, name: "PIÑA COLADA", category: "CÓCTELES", price: 6.00, stockBarra: 40, stockAlmacen: 80 },
+            { id: 53, name: "DAIQUIRI DE FRESA / LIMÓN", category: "CÓCTELES", price: 5.50, stockBarra: 40, stockAlmacen: 80 },
+            { id: 54, name: "MARGARITA CLÁSICA / BLUE", category: "CÓCTELES", price: 6.00, stockBarra: 40, stockAlmacen: 80 },
+            { id: 55, name: "TEQUILA SUNRISE", category: "CÓCTELES", price: 5.50, stockBarra: 40, stockAlmacen: 80 },
+            { id: 56, name: "GIN TONIC CLÁSICO (TANQUERAY/BEEFEATER)", category: "CÓCTELES", price: 6.50, stockBarra: 40, stockAlmacen: 80 },
+            { id: 57, name: "GIN TONIC FRUTOS ROJOS", category: "CÓCTELES", price: 7.00, stockBarra: 40, stockAlmacen: 80 },
+            { id: 58, name: "LONG ISLAND ICED TEA", category: "CÓCTELES", price: 7.50, stockBarra: 35, stockAlmacen: 70 },
+            { id: 59, name: "SEX ON THE BEACH", category: "CÓCTELES", price: 5.50, stockBarra: 40, stockAlmacen: 80 },
+            { id: 60, name: "CAIPIRINHA / CAIPIROSKA", category: "CÓCTELES", price: 5.50, stockBarra: 40, stockAlmacen: 80 },
+            { id: 61, name: "WHISKY SOUR", category: "CÓCTELES", price: 6.50, stockBarra: 35, stockAlmacen: 70 },
+            { id: 62, name: "OLD FASHIONED", category: "CÓCTELES", price: 7.00, stockBarra: 30, stockAlmacen: 60 },
+            { id: 63, name: "NEGRONI", category: "CÓCTELES", price: 7.00, stockBarra: 30, stockAlmacen: 60 },
+            { id: 64, name: "APEROL SPRITZ", category: "CÓCTELES", price: 7.00, stockBarra: 30, stockAlmacen: 60 },
+            { id: 65, name: "SHOT DE TEQUILA JOSÉ CUERVO", category: "CÓCTELES", price: 3.50, stockBarra: 60, stockAlmacen: 120 },
+            { id: 66, name: "SHOT DE JÄGERMEISTER", category: "CÓCTELES", price: 4.50, stockBarra: 50, stockAlmacen: 100 },
+            { id: 67, name: "JÄGERBOMB (SHOT + RED BULL)", category: "CÓCTELES", price: 7.00, stockBarra: 40, stockAlmacen: 80 },
+            { id: 68, name: "CÓCTEL COUNTRY POOL ESPECIAL (JARRA)", category: "CÓCTELES", price: 14.00, stockBarra: 25, stockAlmacen: 50 },
+
+            // CIGARROS Y ARGUILE (69 - 78)
+            { id: 69, name: "CIGARRILLOS BELMONT CAJETILLA 20", category: "CIGARROS Y ARGUILE", price: 4.00, stockBarra: 30, stockAlmacen: 60 },
+            { id: 70, name: "CIGARRILLOS BELMONT CAJETILLA 10", category: "CIGARROS Y ARGUILE", price: 2.20, stockBarra: 30, stockAlmacen: 60 },
+            { id: 71, name: "CIGARRILLOS CONSUL CAJETILLA 20", category: "CIGARROS Y ARGUILE", price: 3.50, stockBarra: 25, stockAlmacen: 50 },
+            { id: 72, name: "CIGARRILLOS LUCKY STRIKE CONVERTIBLES", category: "CIGARROS Y ARGUILE", price: 4.50, stockBarra: 25, stockAlmacen: 50 },
+            { id: 73, name: "CIGARRILLO DETALLADO (UNIDAD)", category: "CIGARROS Y ARGUILE", price: 0.30, stockBarra: 100, stockAlmacen: 200 },
+            { id: 74, name: "VAPER DESECHABLE (VARIOS SABORES)", category: "CIGARROS Y ARGUILE", price: 12.00, stockBarra: 15, stockAlmacen: 30 },
+            { id: 75, name: "SERVICIO DE ARGUILE / HOOKAH CLÁSICO", category: "CIGARROS Y ARGUILE", price: 12.00, stockBarra: 15, stockAlmacen: 30 },
+            { id: 76, name: "SERVICIO DE ARGUILE / HOOKAH FRUTAL VIP", category: "CIGARROS Y ARGUILE", price: 16.00, stockBarra: 10, stockAlmacen: 20 },
+            { id: 77, name: "RECARGA DE ESENCIA Y CARBÓN ARGUILE", category: "CIGARROS Y ARGUILE", price: 6.00, stockBarra: 20, stockAlmacen: 40 },
+            { id: 78, name: "YESQUERO / ENCENDEDOR", category: "CIGARROS Y ARGUILE", price: 1.00, stockBarra: 30, stockAlmacen: 60 },
+
+            // SERVICIOS DE WHISKY Y RON (79 - 98)
+            { id: 79, name: "SERVICIO RON CACIQUE AÑEJO 0.75L", category: "SERVICIOS DE WHISKY Y RON", price: 22.00, stockBarra: 18, stockAlmacen: 36 },
+            { id: 80, name: "SERVICIO RON CACIQUE 500 0.75L", category: "SERVICIOS DE WHISKY Y RON", price: 32.00, stockBarra: 12, stockAlmacen: 24 },
+            { id: 81, name: "SERVICIO RON CACIQUE LEYENDA 0.75L", category: "SERVICIOS DE WHISKY Y RON", price: 45.00, stockBarra: 8, stockAlmacen: 16 },
+            { id: 82, name: "SERVICIO RON SANTA TERESA GRAN RESERVA", category: "SERVICIOS DE WHISKY Y RON", price: 24.00, stockBarra: 15, stockAlmacen: 30 },
+            { id: 83, name: "SERVICIO RON SANTA TERESA LINAJE", category: "SERVICIOS DE WHISKY Y RON", price: 35.00, stockBarra: 12, stockAlmacen: 24 },
+            { id: 84, name: "SERVICIO RON SANTA TERESA 1796", category: "SERVICIOS DE WHISKY Y RON", price: 65.00, stockBarra: 6, stockAlmacen: 12 },
+            { id: 85, name: "SERVICIO RON DIPLOMÁTICO RESERVA EXCLUSIVA", category: "SERVICIOS DE WHISKY Y RON", price: 60.00, stockBarra: 6, stockAlmacen: 12 },
+            { id: 86, name: "SERVICIO WHISKY OLD PARR 12 AÑOS 0.75L", category: "SERVICIOS DE WHISKY Y RON", price: 55.00, stockBarra: 10, stockAlmacen: 20 },
+            { id: 87, name: "SERVICIO WHISKY BUCHANAN'S 12 AÑOS 0.75L", category: "SERVICIOS DE WHISKY Y RON", price: 60.00, stockBarra: 10, stockAlmacen: 20 },
+            { id: 88, name: "SERVICIO WHISKY BUCHANAN'S 18 AÑOS 0.75L", category: "SERVICIOS DE WHISKY Y RON", price: 110.00, stockBarra: 4, stockAlmacen: 8 },
+            { id: 89, name: "SERVICIO WHISKY BLACK & WHITE 0.75L", category: "SERVICIOS DE WHISKY Y RON", price: 28.00, stockBarra: 14, stockAlmacen: 28 },
+            { id: 90, name: "SERVICIO WHISKY JOHNNIE WALKER RED LABEL", category: "SERVICIOS DE WHISKY Y RON", price: 36.00, stockBarra: 12, stockAlmacen: 24 },
+            { id: 91, name: "SERVICIO WHISKY JOHNNIE WALKER BLACK LABEL", category: "SERVICIOS DE WHISKY Y RON", price: 60.00, stockBarra: 8, stockAlmacen: 16 },
+            { id: 92, name: "SERVICIO WHISKY CHIVAS REGAL 12 AÑOS", category: "SERVICIOS DE WHISKY Y RON", price: 58.00, stockBarra: 8, stockAlmacen: 16 },
+            { id: 93, name: "SERVICIO VODKA GORDONS / STANISLAFF 0.75L", category: "SERVICIOS DE WHISKY Y RON", price: 20.00, stockBarra: 15, stockAlmacen: 30 },
+            { id: 94, name: "SERVICIO VODKA ABSOLUT / SMIRNOFF 0.75L", category: "SERVICIOS DE WHISKY Y RON", price: 35.00, stockBarra: 10, stockAlmacen: 20 },
+            { id: 95, name: "SERVICIO TEQUILA JOSÉ CUERVO REPOSADO", category: "SERVICIOS DE WHISKY Y RON", price: 42.00, stockBarra: 8, stockAlmacen: 16 },
+            { id: 96, name: "TRAGO DE WHISKY 12 AÑOS (ONZAS)", category: "SERVICIOS DE WHISKY Y RON", price: 6.00, stockBarra: 40, stockAlmacen: 80 },
+            { id: 97, name: "TRAGO DE RON AÑEJO / 500 (ONZAS)", category: "SERVICIOS DE WHISKY Y RON", price: 4.00, stockBarra: 50, stockAlmacen: 100 },
+            { id: 98, name: "BOTELLA DE VINO TINTO / BLANCO RESERVA", category: "SERVICIOS DE WHISKY Y RON", price: 25.00, stockBarra: 10, stockAlmacen: 20 },
+
+            // DESCORCHE (99 - 103)
+            { id: 99, name: "DESCORCHE BOTELLA NACIONAL (RON / VODKA)", category: "DESCORCHE", price: 10.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 100, name: "DESCORCHE WHISKY 12 AÑOS / IMPORTADO", category: "DESCORCHE", price: 15.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 101, name: "DESCORCHE WHISKY 18 AÑOS / PREMIUM", category: "DESCORCHE", price: 25.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 102, name: "DESCORCHE VINO / ESPUMANTE", category: "DESCORCHE", price: 10.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 103, name: "DESCORCHE CAVA / TOBO CERVEZAS EXTERNAS", category: "DESCORCHE", price: 15.00, stockBarra: 99, stockAlmacen: 99 },
+
+            // COMIDA (104 - 122)
+            { id: 104, name: "HAMBURGUESA CLÁSICA COUNTRY (CARNE + PAPAS)", category: "COMIDA", price: 7.50, stockBarra: 40, stockAlmacen: 80 },
+            { id: 105, name: "HAMBURGUESA DOBLE CARNE BACON & CHEDDAR", category: "COMIDA", price: 10.50, stockBarra: 35, stockAlmacen: 70 },
+            { id: 106, name: "HAMBURGUESA CRISPY CHICKEN", category: "COMIDA", price: 8.00, stockBarra: 35, stockAlmacen: 70 },
+            { id: 107, name: "PEPITO MIXTO (CARNE, POLLO, TOCINETA)", category: "COMIDA", price: 9.50, stockBarra: 30, stockAlmacen: 60 },
+            { id: 108, name: "PEPITO DE LOMITO GRATINADO", category: "COMIDA", price: 11.50, stockBarra: 25, stockAlmacen: 50 },
+            { id: 109, name: "PERRO CALIENTE ESPECIAL COUNTRY", category: "COMIDA", price: 3.50, stockBarra: 50, stockAlmacen: 100 },
+            { id: 110, name: "CLUB HOUSE TRADICIONAL CON PAPAS", category: "COMIDA", price: 8.50, stockBarra: 30, stockAlmacen: 60 },
+            { id: 111, name: "RACIÓN DE TEQUEÑOS (10 UNIDADES)", category: "COMIDA", price: 6.00, stockBarra: 45, stockAlmacen: 90 },
+            { id: 112, name: "RACIÓN DE TEQUEÑOS (20 UNIDADES)", category: "COMIDA", price: 11.00, stockBarra: 30, stockAlmacen: 60 },
+            { id: 113, name: "ALITAS DE POLLO BBQ / PICANTES (10 PZAS)", category: "COMIDA", price: 9.00, stockBarra: 35, stockAlmacen: 70 },
+            { id: 114, name: "TENDERS DE POLLO CRUJIENTES + PAPAS", category: "COMIDA", price: 8.50, stockBarra: 35, stockAlmacen: 70 },
+            { id: 115, name: "SALCHIPAPAS ESPECIALES (CHEDDAR Y TOCINETA)", category: "COMIDA", price: 7.00, stockBarra: 40, stockAlmacen: 80 },
+            { id: 116, name: "NACHOS SUPREMOS CON CARNE Y GUACAMOLE", category: "COMIDA", price: 9.50, stockBarra: 30, stockAlmacen: 60 },
+            { id: 117, name: "PARRILLA COUNTRY INDIVIDUAL (CARNE, POLLO, CHORIZO)", category: "COMIDA", price: 14.00, stockBarra: 25, stockAlmacen: 50 },
+            { id: 118, name: "PARRILLA COUNTRY PARA COMPARTIR (2-3 PERS)", category: "COMIDA", price: 26.00, stockBarra: 20, stockAlmacen: 40 },
+            { id: 119, name: "TABLA DE PICADERA SPORT BAR (MIXTA)", category: "COMIDA", price: 18.00, stockBarra: 25, stockAlmacen: 50 },
+            { id: 120, name: "PIZZA MARGARITA FAMILIAR", category: "COMIDA", price: 11.00, stockBarra: 20, stockAlmacen: 40 },
+            { id: 121, name: "PIZZA PEPPERONI / 4 QUESOS FAMILIAR", category: "COMIDA", price: 13.50, stockBarra: 20, stockAlmacen: 40 },
+            { id: 122, name: "RACIÓN DE PAPAS FRITAS CON CHEDDAR", category: "COMIDA", price: 5.00, stockBarra: 45, stockAlmacen: 90 },
+
+            // BILLAR (123 - 130)
+            { id: 123, name: "HORA DE BILLAR POOL PROFESIONAL", category: "BILLAR", price: 10.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 124, name: "MEDIA HORA DE BILLAR (30 MINUTOS)", category: "BILLAR", price: 5.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 125, name: "HORA DE MESA VIP PRIVADA", category: "BILLAR", price: 15.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 126, name: "ALQUILER DE TACO PROFESIONAL (CARBONO)", category: "BILLAR", price: 3.00, stockBarra: 12, stockAlmacen: 20 },
+            { id: 127, name: "TIZA PROFESIONAL TAOM / KAMUI (UNIDAD)", category: "BILLAR", price: 2.00, stockBarra: 30, stockAlmacen: 60 },
+            { id: 128, name: "GUANTE DE BILLAR (UNIDAD)", category: "BILLAR", price: 5.00, stockBarra: 20, stockAlmacen: 40 },
+            { id: 129, name: "INSCRIPCIÓN TORNEO RELÁMPAGO BILLAR", category: "BILLAR", price: 10.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 130, name: "PARTIDA RETO / MESA LIBRE (15 MIN)", category: "BILLAR", price: 2.50, stockBarra: 99, stockAlmacen: 99 },
+
+            // CONTROL DE MESAS (CRONÓMETRO) (131 - 135)
+            { id: 131, name: "CRONÓMETRO BILLAR 1 (TIEMPO DE JUEGO)", category: "CONTROL DE MESAS (CRONÓMETRO)", price: 10.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 132, name: "CRONÓMETRO BILLAR 2 (TIEMPO DE JUEGO)", category: "CONTROL DE MESAS (CRONÓMETRO)", price: 10.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 133, name: "CRONÓMETRO BILLAR 3 (TIEMPO DE JUEGO)", category: "CONTROL DE MESAS (CRONÓMETRO)", price: 10.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 134, name: "CRONÓMETRO BILLAR 4 (TIEMPO DE JUEGO)", category: "CONTROL DE MESAS (CRONÓMETRO)", price: 10.00, stockBarra: 99, stockAlmacen: 99 },
+            { id: 135, name: "CRONÓMETRO MESA VIP (TIEMPO DE JUEGO)", category: "CONTROL DE MESAS (CRONÓMETRO)", price: 15.00, stockBarra: 99, stockAlmacen: 99 },
+
+            // PROMOCIONES (136 - 143)
+            { id: 136, name: "PROMO HAPPY HOUR: 2X1 MOJITOS / CUBA LIBRE", category: "PROMOCIONES", price: 6.00, stockBarra: 50, stockAlmacen: 100 },
+            { id: 137, name: "COMBO BILLAR: 1 HORA BILLAR + TOBO NACIONAL", category: "PROMOCIONES", price: 20.00, stockBarra: 30, stockAlmacen: 60 },
+            { id: 138, name: "COMBO SPORT BAR: 2 HAMBURGUESAS + 4 CERVEZAS", category: "PROMOCIONES", price: 18.00, stockBarra: 30, stockAlmacen: 60 },
+            { id: 139, name: "COMBO RON CACIQUE + 2 REFRESCOS 1.5L + HIELO", category: "PROMOCIONES", price: 26.00, stockBarra: 20, stockAlmacen: 40 },
+            { id: 140, name: "COMBO WHISKY BLACK & WHITE + SODA + HIELO", category: "PROMOCIONES", price: 32.00, stockBarra: 15, stockAlmacen: 30 },
+            { id: 141, name: "COMBO PICADERA + 10 TEQUEÑOS + TOBO SOLERA", category: "PROMOCIONES", price: 34.00, stockBarra: 20, stockAlmacen: 40 },
+            { id: 142, name: "PROMO CUMPLEAÑERO (TORTA + SHOT CORTESÍA)", category: "PROMOCIONES", price: 0.00, stockBarra: 50, stockAlmacen: 50 },
+            { id: 143, name: "COMBO ARGUILE + 2 CÓCTELES A ELECCIÓN", category: "PROMOCIONES", price: 19.00, stockBarra: 20, stockAlmacen: 40 },
+
+            // COCINA (144 - 150)
+            { id: 144, name: "EXTRA DE QUESO AMARILLO / CHEDDAR", category: "COCINA", price: 1.50, stockBarra: 50, stockAlmacen: 100 },
+            { id: 145, name: "EXTRA DE TOCINETA CRUJIENTE", category: "COCINA", price: 2.00, stockBarra: 50, stockAlmacen: 100 },
+            { id: 146, name: "EXTRA DE CARNE DE HAMBURGUESA", category: "COCINA", price: 3.00, stockBarra: 40, stockAlmacen: 80 },
+            { id: 147, name: "EXTRA DE SALSA TÁRTARA / GUASACACA / BBQ", category: "COCINA", price: 1.00, stockBarra: 60, stockAlmacen: 120 },
+            { id: 148, name: "PORCIÓN DE AREPITAS CON NATILLA", category: "COCINA", price: 3.00, stockBarra: 40, stockAlmacen: 80 },
+            { id: 149, name: "ENSALADA CÉSAR CON POLLO", category: "COCINA", price: 7.50, stockBarra: 25, stockAlmacen: 50 },
+            { id: 150, name: "EMPANADITAS OPERADAS (RACIÓN 6 UNIDADES)", category: "COCINA", price: 5.00, stockBarra: 40, stockAlmacen: 80 },
+
+            // IMPUESTOS (151 - 154)
+            { id: 151, name: "IVA (16%) SOBRE CONSUMO GRAVADO", category: "IMPUESTOS", price: 0.00, stockBarra: 999, stockAlmacen: 999 },
+            { id: 152, name: "IGTF (3%) PAGOS EN DIVISAS", category: "IMPUESTOS", price: 0.00, stockBarra: 999, stockAlmacen: 999 },
+            { id: 153, name: "SERVICIO DE SALÓN / ATENCIÓN (10%)", category: "IMPUESTOS", price: 0.00, stockBarra: 999, stockAlmacen: 999 },
+            { id: 154, name: "CARGO POR EMPAQUE PARA LLEVAR", category: "IMPUESTOS", price: 0.50, stockBarra: 200, stockAlmacen: 500 },
+
+            // ACOMPAÑAMIENTO (SERVICIO) (155 - 162)
+            { id: 155, name: "SERVICIO DE HIELO (TOBO GRANDE)", category: "ACOMPAÑAMIENTO (SERVICIO)", price: 2.00, stockBarra: 100, stockAlmacen: 200 },
+            { id: 156, name: "SERVICIO DE LIMÓN Y SAL (PLATO)", category: "ACOMPAÑAMIENTO (SERVICIO)", price: 1.50, stockBarra: 80, stockAlmacen: 160 },
+            { id: 157, name: "SERVICIO DE VASOS DESECHABLES (PAQUETE)", category: "ACOMPAÑAMIENTO (SERVICIO)", price: 1.50, stockBarra: 80, stockAlmacen: 160 },
+            { id: 158, name: "SERVICIO DE AGUA QUINA / SODA PARA TRAGOS", category: "ACOMPAÑAMIENTO (SERVICIO)", price: 1.50, stockBarra: 60, stockAlmacen: 120 },
+            { id: 159, name: "SERVICIO DE REFRESCO 1.5L PARA MEZCLA", category: "ACOMPAÑAMIENTO (SERVICIO)", price: 3.00, stockBarra: 50, stockAlmacen: 100 },
+            { id: 160, name: "SERVICIO DE JUGO DE NARANJA / PARCHITA 1L", category: "ACOMPAÑAMIENTO (SERVICIO)", price: 3.50, stockBarra: 40, stockAlmacen: 80 },
+            { id: 161, name: "SERVICIO DE GRANADINA / JARABE DE GOMA", category: "ACOMPAÑAMIENTO (SERVICIO)", price: 2.00, stockBarra: 40, stockAlmacen: 80 },
+            { id: 162, name: "SERVICIO COMPLETO DE MESA (HIELO + LIMÓN + VASOS)", category: "ACOMPAÑAMIENTO (SERVICIO)", price: 4.00, stockBarra: 80, stockAlmacen: 160 }
+        ];
+
+        const TABLES_LIST = [
+            "MESA 1", "MESA 2", "MESA 3", "MESA 4", "MESA 5",
+            "MESA 6", "MESA 7", "MESA 8", "MESA 9", "MESA 10",
+            "BILLAR 1", "BILLAR 2", "BILLAR 3", "BILLAR 4",
+            "MESA VIP", "BARRA", "PARA LLEVAR"
+        ];
+
+        const BILLIARD_TABLES_CONFIG = [
+            { id: "BILLAR 1", label: "BILLAR 1", ratePerHour: 10.00, subtitle: "Mesa Pool Profesional #1" },
+            { id: "BILLAR 2", label: "BILLAR 2", ratePerHour: 10.00, subtitle: "Mesa Pool Profesional #2" },
+            { id: "BILLAR 3", label: "BILLAR 3", ratePerHour: 10.00, subtitle: "Mesa Pool Profesional #3" },
+            { id: "BILLAR 4", label: "BILLAR 4", ratePerHour: 10.00, subtitle: "Mesa Pool Profesional #4" },
+            { id: "MESA VIP", label: "MESA VIP", ratePerHour: 15.00, subtitle: "Sala Privada VIP + Pool" }
+        ];
+
+        // =========================================================================
+        // 2. ESTADO GLOBAL Y PERSISTENCIA (localStorage)
+        // =========================================================================
+        const STORAGE_KEY = "country_pool_pos_v1";
+
+        let state = {
+            products: [],
+            orders: {},         // { "MESA 1": [ { productId, name, price, qty, isCustom? } ] }
+            currentTable: "MESA 1",
+            selectedCategory: "ALL",
+            paymentMethod: "Efectivo USD",
+            exchangeRate: 65.50,
+            billiardTimers: {}, // { "BILLAR 1": { running: bool, elapsedSeconds: num, lastTick: timestamp, ratePerHour: 10 } }
+            salesHistory: []    // [ { id, date, table, items, totalUsd, totalBs, rate, paymentMethod } ]
+        };
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state = { ...state, ...parsed };
+                    // Ajustar tiempo transcurrido si algún cronómetro quedó corriendo al cerrar pestaña
+                    const now = Date.now();
+                    Object.keys(state.billiardTimers).forEach(key => {
+                        const t = state.billiardTimers[key];
+                        if (t.running && t.lastTick) {
+                            const diffSec = Math.floor((now - t.lastTick) / 1000);
+                            t.elapsedSeconds += diffSec;
+                            t.lastTick = now;
+                        }
+                    });
+                } catch (e) {
+                    console.error("Error cargando estado guardado:", e);
+                    initDefaultState();
+                }
+            } else {
+                initDefaultState();
+            }
+        }
+
+        function initDefaultState() {
+            state.products = JSON.parse(JSON.stringify(INITIAL_PRODUCTS));
+            state.orders = {};
+            TABLES_LIST.forEach(t => state.orders[t] = []);
+            state.billiardTimers = {};
+            BILLIARD_TABLES_CONFIG.forEach(bt => {
+                state.billiardTimers[bt.id] = {
+                    running: false,
+                    elapsedSeconds: 0,
+                    lastTick: null,
+                    ratePerHour: bt.ratePerHour
+                };
+            });
+            state.salesHistory = [];
+            saveState();
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                showToast("Error guardando datos en navegador", "error");
+            }
+        }
+
+        // =========================================================================
+        // 3. NAVEGACIÓN ENTRE PESTAÑAS Y UTILIDADES UI
+        // =========================================================================
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-600', 'text-white', 'shadow-md');
+                btn.classList.add('text-slate-400', 'hover:text-white');
+            });
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-md');
+            activeBtn.classList.remove('text-slate-400', 'hover:text-white');
+
+            if (tabId === 'pos') {
+                renderTablesSelector();
+                renderPosCatalog();
+                renderCart();
+            } else if (tabId === 'billiard') {
+                renderBilliardTables();
+            } else if (tabId === 'inventory') {
+                populateInventoryCategoryFilter();
+                renderInventoryTable();
+            } else if (tabId === 'sales') {
+                renderSalesHistory();
+            }
+            lucide.createIcons();
+        }
+
+        function updateExchangeRate(val) {
+            const num = parseFloat(val);
+            if (!isNaN(num) && num > 0) {
+                state.exchangeRate = num;
+                saveState();
+                renderCart();
+                renderPosCatalog();
+                showToast(`Tasa actualizada a Bs. ${num.toFixed(2)} / $`, "success");
+            }
+        }
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            const colors = type === "error"
+                ? "bg-rose-600 border-rose-400 text-white"
+                : type === "warning"
+                ? "bg-amber-500 border-amber-300 text-slate-950"
+                : "bg-emerald-600 border-emerald-400 text-white";
+            toast.className = `${colors} border px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold flex items-center gap-2 transition-all transform translate-y-0 opacity-100`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.transform = "translateY(10px)";
+                setTimeout(() => toast.remove(), 300);
+            }, 2800);
+        }
+
+        // =========================================================================
+        // 4. PUNTO DE VENTA (POS) - MESAS, CATÁLOGO Y CARRITO
+        // =========================================================================
+        function renderTablesSelector() {
+            const grid = document.getElementById("tables-selector-grid");
+            grid.innerHTML = TABLES_LIST.map(table => {
+                const isSelected = state.currentTable === table;
+                const itemsCount = (state.orders[table] || []).reduce((acc, i) => acc + i.qty, 0);
+                const hasItems = itemsCount > 0;
+                const isBilliard = table.startsWith("BILLAR") || table === "MESA VIP";
+
+                let baseClasses = "relative px-2.5 py-2 rounded-xl text-xs font-bold transition-all border text-center truncate cursor-pointer ";
+                if (isSelected) {
+                    baseClasses += "bg-emerald-600 border-emerald-400 text-white shadow-lg shadow-emerald-500/25";
+                } else if (hasItems) {
+                    baseClasses += "bg-slate-800 border-amber-500/60 text-amber-300 hover:bg-slate-750";
+                } else {
+                    baseClasses += "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white";
+                }
+
+                return `
+                    <button onclick="selectTable('${table}')" class="${baseClasses}">
+                        ${hasItems ? `<span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>` : ''}
+                        <span class="block truncate">${isBilliard ? '🎱 ' : ''}${table}</span>
+                        ${hasItems ? `<span class="block text-[10px] font-mono opacity-90">${itemsCount} ítems</span>` : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectTable(tableName) {
+            state.currentTable = tableName;
+            saveState();
+            renderTablesSelector();
+            renderCart();
+        }
+
+        function renderCategoryPills() {
+            const bar = document.getElementById("pos-categories-bar");
+            const categories = ["ALL", ...new Set(state.products.map(p => p.category))];
+            bar.innerHTML = categories.map(cat => {
+                const active = state.selectedCategory === cat;
+                const label = cat === "ALL" ? "TODOS (162)" : cat;
+                return `
+                    <button onclick="filterByCategory('${cat}')" class="whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                        active
+                            ? "bg-amber-500 border-amber-400 text-slate-950 shadow-md"
+                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
+                    }">
+                        ${label}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function filterByCategory(cat) {
+            state.selectedCategory = cat;
+            renderCategoryPills();
+            renderPosCatalog();
+        }
+
+        function renderPosCatalog() {
+            const grid = document.getElementById("pos-products-grid");
+            const query = document.getElementById("pos-search-input").value.toLowerCase().trim();
+            const onlyStock = document.getElementById("pos-only-stock").checked;
+
+            const filtered = state.products.filter(p => {
+                const matchCat = state.selectedCategory === "ALL" || p.category === state.selectedCategory;
+                const matchQuery = !query || p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query);
+                const matchStock = !onlyStock || p.stockBarra > 0;
+                return matchCat && matchQuery && matchStock;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
+                        <p class="text-sm font-semibold">No se encontraron productos con ese filtro.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => {
+                const outOfStock = p.stockBarra <= 0;
+                const lowStock = p.stockBarra > 0 && p.stockBarra <= 5;
+                const priceBs = (p.price * state.exchangeRate).toFixed(2);
+
+                return `
+                    <div onclick="${outOfStock ? '' : `addToCart(${p.id})`}" class="bg-slate-900 border ${outOfStock ? 'border-rose-900/50 opacity-60 cursor-not-allowed' : 'border-slate-800 hover:border-emerald-500/70 cursor-pointer active:scale-[0.98]'} rounded-2xl p-3 flex flex-col justify-between transition-all group">
+                        <div>
+                            <div class="flex items-center justify-between gap-1 mb-1.5">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate max-w-[70%]">${p.category}</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-md font-bold ${
+                                    outOfStock ? 'bg-rose-500/20 text-rose-400' : lowStock ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/15 text-emerald-400'
+                                }">
+                                    Barra: ${p.stockBarra}
+                                </span>
+                            </div>
+                            <h3 class="text-xs font-bold text-slate-100 group-hover:text-emerald-300 leading-snug line-clamp-2 mb-2">
+                                ${p.name}
+                            </h3>
+                        </div>
+                        <div class="pt-2 border-t border-slate-800/80 flex items-end justify-between">
+                            <div>
+                                <div class="font-mono font-extrabold text-base text-emerald-400">$${p.price.toFixed(2)}</div>
+                                <div class="font-mono text-[10px] text-slate-400">Bs. ${priceBs}</div>
+                            </div>
+                            <span class="w-7 h-7 rounded-lg bg-slate-800 group-hover:bg-emerald-600 text-slate-300 group-hover:text-white flex items-center justify-center transition-colors font-bold text-base">
+                                +
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addToCart(productId) {
+            const product = state.products.find(p => p.id === productId);
+            if (!product) return;
+
+            if (!state.orders[state.currentTable]) {
+                state.orders[state.currentTable] = [];
+            }
+
+            const currentOrder = state.orders[state.currentTable];
+            const existing = currentOrder.find(item => item.productId === productId && !item.isCustom);
+
+            const currentQtyInCart = existing ? existing.qty : 0;
+            if (currentQtyInCart + 1 > product.stockBarra) {
+                showToast(`Stock insuficiente en Barra para ${product.name} (Disp: ${product.stockBarra})`, "warning");
+                return;
+            }
+
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                currentOrder.push({
+                    productId: product.id,
+                    name: product.name,
+                    price: product.price,
+                    qty: 1,
+                    isCustom: false
+                });
+            }
+
+            saveState();
+            renderTablesSelector();
+            renderCart();
+        }
+
+        function updateCartItemQty(index, delta) {
+            const currentOrder = state.orders[state.currentTable];
+            if (!currentOrder || !currentOrder[index]) return;
+
+            const item = currentOrder[index];
+            const newQty = item.qty + delta;
+
+            if (newQty <= 0) {
+                currentOrder.splice(index, 1);
+            } else {
+                if (!item.isCustom) {
+                    const prod = state.products.find(p => p.id === item.productId);
+                    if (prod && newQty > prod.stockBarra) {
+                        showToast(`Máximo disponible en Barra: ${prod.stockBarra}`, "warning");
+                        return;
+                    }
+                }
+                item.qty = newQty;
+            }
+
+            saveState();
+            renderTablesSelector();
+            renderCart();
+        }
+
+        function renderCart() {
+            document.getElementById("current-table-title").innerText = state.currentTable;
+            const container = document.getElementById("cart-items-container");
+            const currentOrder = state.orders[state.currentTable] || [];
+
+            if (currentOrder.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center text-slate-500 py-10">
+                        <i data-lucide="shopping-bag" class="w-10 h-10 mb-2 opacity-40"></i>
+                        <p class="text-xs font-semibold">La cuenta de ${state.currentTable} está vacía</p>
+                        <p class="text-[11px] mt-1">Haz clic en los productos del catálogo para agregarlos.</p>
+                    </div>
+                `;
+                document.getElementById("cart-total-items").innerText = "0";
+                document.getElementById("cart-total-usd").innerText = "$0.00";
+                document.getElementById("cart-total-bs").innerText = "Bs. 0.00";
+                lucide.createIcons();
+                return;
+            }
+
+            let totalUsd = 0;
+            let totalItems = 0;
+
+            container.innerHTML = currentOrder.map((item, idx) => {
+                const subtotal = item.price * item.qty;
+                totalUsd += subtotal;
+                totalItems += item.qty;
+
+                return `
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs font-bold text-white truncate" title="${item.name}">${item.name}</div>
+                            <div class="text-[11px] font-mono text-slate-400">
+                                $${item.price.toFixed(2)} c/u &bull; <span class="text-emerald-400 font-bold">$${subtotal.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-lg p-1">
+                            <button onclick="updateCartItemQty(${idx}, -1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-rose-600 text-white font-bold text-xs flex items-center justify-center transition-colors">-</button>
+                            <span class="w-6 text-center font-mono text-xs font-bold text-white">${item.qty}</span>
+                            <button onclick="updateCartItemQty(${idx}, 1)" class="w-6 h-6 rounded bg-slate-800 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center transition-colors">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const totalBs = totalUsd * state.exchangeRate;
+            document.getElementById("cart-total-items").innerText = totalItems;
+            document.getElementById("cart-total-usd").innerText = `$${totalUsd.toFixed(2)}`;
+            document.getElementById("cart-total-bs").innerText = `Bs. ${totalBs.toFixed(2)}`;
+        }
+
+        function selectPaymentMethod(method) {
+            state.paymentMethod = method;
+            document.querySelectorAll('.pay-method-btn').forEach(btn => {
+                if (btn.innerText.includes(method.split(' ')[0])) {
+                    btn.className = "pay-method-btn active text-xs py-2 px-2 rounded-lg border border-emerald-500 bg-emerald-500/20 text-emerald-300 font-semibold";
+                } else {
+                    btn.className = "pay-method-btn text-xs py-2 px-2 rounded-lg border border-slate-700 bg-slate-950 text-slate-400 hover:text-white font-semibold";
+                }
+            });
+        }
+
+        function clearCurrentTableOrder() {
+            const currentOrder = state.orders[state.currentTable] || [];
+            if (currentOrder.length === 0) return;
+
+            openConfirmModal(
+                `Vaciar cuenta de ${state.currentTable}`,
+                "¿Deseas eliminar todos los ítems cargados a esta mesa sin cobrar?",
+                () => {
+                    state.orders[state.currentTable] = [];
+                    saveState();
+                    renderTablesSelector();
+                    renderCart();
+                    showToast(`Cuenta de ${state.currentTable} vaciada`, "warning");
+                }
+            );
+        }
+
+        function checkoutCurrentTable() {
+            const currentOrder = state.orders[state.currentTable] || [];
+            if (currentOrder.length === 0) {
+                showToast("Agrega al menos un producto antes de cobrar", "warning");
+                return;
+            }
+
+            // Descontar stock en Barra
+            currentOrder.forEach(item => {
+                if (!item.isCustom) {
+                    const prod = state.products.find(p => p.id === item.productId);
+                    if (prod) {
+                        prod.stockBarra = Math.max(0, prod.stockBarra - item.qty);
+                    }
+                }
+            });
+
+            const totalUsd = currentOrder.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            const totalBs = totalUsd * state.exchangeRate;
+
+            const saleRecord = {
+                id: "TCK-" + String(state.salesHistory.length + 1).padStart(4, "0"),
+                date: new Date().toLocaleString("es-VE"),
+                table: state.currentTable,
+                items: JSON.parse(JSON.stringify(currentOrder)),
+                totalUsd: totalUsd,
+                totalBs: totalBs,
+                rate: state.exchangeRate,
+                paymentMethod: state.paymentMethod
+            };
+
+            state.salesHistory.unshift(saleRecord);
+            state.orders[state.currentTable] = [];
+            saveState();
+
+            renderTablesSelector();
+            renderPosCatalog();
+            renderCart();
+            showToast(`¡Venta ${saleRecord.id} cobrada con éxito! ($${totalUsd.toFixed(2)})`, "success");
+            openTicketModal(saleRecord, false);
+        }
+
+        function printPreCheck() {
+            const currentOrder = state.orders[state.currentTable] || [];
+            if (currentOrder.length === 0) {
+                showToast("La cuenta está vacía", "warning");
+                return;
+            }
+            const totalUsd = currentOrder.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            const preCheck = {
+                id: "PRE-CUENTA",
+                date: new Date().toLocaleString("es-VE"),
+                table: state.currentTable,
+                items: currentOrder,
+                totalUsd: totalUsd,
+                totalBs: totalUsd * state.exchangeRate,
+                rate: state.exchangeRate,
+                paymentMethod: "POR DEFINIR"
+            };
+            openTicketModal(preCheck, true);
+        }
+
+        // =========================================================================
+        // 5. CONTROL DE MESAS DE BILLAR (CRONÓMETRO EN VIVO)
+        // =========================================================================
+        function formatSeconds(sec) {
+            const hrs = Math.floor(sec / 3600);
+            const mins = Math.floor((sec % 3600) / 60);
+            const secs = sec % 60;
+            return [hrs, mins, secs].map(v => String(v).padStart(2, '0')).join(':');
+        }
+
+        function calculateBilliardCost(seconds, ratePerHour) {
+            if (seconds <= 0) return 0;
+            // Cálculo exacto por minuto (mínimo 1 minuto si inició)
+            const minutes = Math.max(1, Math.ceil(seconds / 60));
+            const rawCost = (minutes / 60) * ratePerHour;
+            return Math.round(rawCost * 100) / 100;
+        }
+
+        function renderBilliardTables() {
+            const grid = document.getElementById("billiard-tables-grid");
+            let activeCount = 0;
+
+            grid.innerHTML = BILLIARD_TABLES_CONFIG.map(cfg => {
+                const timer = state.billiardTimers[cfg.id];
+                if (timer.running) activeCount++;
+                const costUsd = calculateBilliardCost(timer.elapsedSeconds, timer.ratePerHour);
+                const costBs = costUsd * state.exchangeRate;
+
+                return `
+                    <div class="bg-slate-900 border ${timer.running ? 'border-emerald-500 neon-border-emerald' : 'border-slate-800'} rounded-2xl p-5 flex flex-col justify-between space-y-4 transition-all">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-lg font-extrabold text-white">${cfg.label}</h3>
+                                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                                        timer.running ? 'bg-emerald-500/20 text-emerald-400 animate-pulse' : 'bg-slate-800 text-slate-400'
+                                    }">
+                                        ${timer.running ? 'EN JUEGO' : 'DISPONIBLE'}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-400">${cfg.subtitle}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-slate-400 block">Tarifa/Hora</span>
+                                <span class="font-mono font-bold text-amber-400 text-sm">$${timer.ratePerHour.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <!-- Pantalla Digital del Cronómetro -->
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center space-y-1">
+                            <div id="timer-clock-${cfg.id.replace(/\s/g, '')}" class="font-mono text-3xl sm:text-4xl font-extrabold tracking-widest ${timer.running ? 'text-emerald-400' : 'text-slate-200'}">
+                                ${formatSeconds(timer.elapsedSeconds)}
+                            </div>
+                            <div class="flex items-center justify-center gap-3 pt-1">
+                                <span id="timer-cost-usd-${cfg.id.replace(/\s/g, '')}" class="font-mono text-lg font-bold text-amber-400">$${costUsd.toFixed(2)}</span>
+                                <span class="text-slate-600">|</span>
+                                <span id="timer-cost-bs-${cfg.id.replace(/\s/g, '')}" class="font-mono text-xs text-slate-400">Bs. ${costBs.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <!-- Controles del Cronómetro -->
+                        <div class="grid grid-cols-3 gap-2">
+                            ${!timer.running ? `
+                                <button onclick="startBilliardTimer('${cfg.id}')" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-colors">
+                                    <i data-lucide="play" class="w-3.5 h-3.5"></i> Iniciar
+                                </button>
+                            ` : `
+                                <button onclick="pauseBilliardTimer('${cfg.id}')" class="py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-colors">
+                                    <i data-lucide="pause" class="w-3.5 h-3.5"></i> Pausar
+                                </button>
+                            `}
+                            <button onclick="resetBilliardTimer('${cfg.id}')" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-colors">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reiniciar
+                            </button>
+                            <button onclick="sendBilliardTimeToOrder('${cfg.id}')" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-colors">
+                                <i data-lucide="send" class="w-3.5 h-3.5"></i> A Cuenta
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const badge = document.getElementById("active-tables-badge");
+            if (activeCount > 0) {
+                badge.innerText = activeCount;
+                badge.classList.remove("hidden");
+            } else {
+                badge.classList.add("hidden");
+            }
+            lucide.createIcons();
+        }
+
+        function startBilliardTimer(tableId) {
+            const t = state.billiardTimers[tableId];
+            if (!t.running) {
+                t.running = true;
+                t.lastTick = Date.now();
+                saveState();
+                renderBilliardTables();
+                showToast(`Cronómetro iniciado en ${tableId}`, "success");
+            }
+        }
+
+        function pauseBilliardTimer(tableId) {
+            const t = state.billiardTimers[tableId];
+            if (t.running) {
+                t.running = false;
+                t.lastTick = null;
+                saveState();
+                renderBilliardTables();
+                showToast(`Cronómetro pausado en ${tableId}`, "warning");
+            }
+        }
+
+        function resetBilliardTimer(tableId) {
+            openConfirmModal(
+                `Reiniciar ${tableId}`,
+                `¿Seguro que deseas poner en 00:00:00 el cronómetro de ${tableId}?`,
+                () => {
+                    state.billiardTimers[tableId].running = false;
+                    state.billiardTimers[tableId].elapsedSeconds = 0;
+                    state.billiardTimers[tableId].lastTick = null;
+                    saveState();
+                    renderBilliardTables();
+                    showToast(`Cronómetro de ${tableId} reiniciado`, "success");
+                }
+            );
+        }
+
+        function sendBilliardTimeToOrder(tableId) {
+            const t = state.billiardTimers[tableId];
+            if (t.elapsedSeconds <= 0) {
+                showToast("El cronómetro está en 00:00:00", "warning");
+                return;
+            }
+
+            const costUsd = calculateBilliardCost(t.elapsedSeconds, t.ratePerHour);
+            const timeFormatted = formatSeconds(t.elapsedSeconds);
+
+            if (!state.orders[tableId]) state.orders[tableId] = [];
+            state.orders[tableId].push({
+                productId: null,
+                name: `TIEMPO ${tableId} (${timeFormatted})`,
+                price: costUsd,
+                qty: 1,
+                isCustom: true
+            });
+
+            // Pausar y reiniciar cronómetro tras enviarlo a cuenta
+            t.running = false;
+            t.elapsedSeconds = 0;
+            t.lastTick = null;
+            state.currentTable = tableId;
+            saveState();
+
+            renderBilliardTables();
+            showToast(`Tiempo enviado a la cuenta de ${tableId} ($${costUsd.toFixed(2)})`, "success");
+            switchTab('pos');
+        }
+
+        // Bucle en tiempo real cada 1 segundo para los cronómetros activos
+        setInterval(() => {
+            let anyRunning = false;
+            const now = Date.now();
+            Object.keys(state.billiardTimers).forEach(tableId => {
+                const t = state.billiardTimers[tableId];
+                if (t.running) {
+                    anyRunning = true;
+                    const diff = Math.floor((now - t.lastTick) / 1000);
+                    if (diff >= 1) {
+                        t.elapsedSeconds += diff;
+                        t.lastTick = now;
+
+                        const domKey = tableId.replace(/\s/g, '');
+                        const clockEl = document.getElementById(`timer-clock-${domKey}`);
+                        const costUsdEl = document.getElementById(`timer-cost-usd-${domKey}`);
+                        const costBsEl = document.getElementById(`timer-cost-bs-${domKey}`);
+
+                        if (clockEl) {
+                            const costUsd = calculateBilliardCost(t.elapsedSeconds, t.ratePerHour);
+                            clockEl.innerText = formatSeconds(t.elapsedSeconds);
+                            costUsdEl.innerText = `$${costUsd.toFixed(2)}`;
+                            costBsEl.innerText = `Bs. ${(costUsd * state.exchangeRate).toFixed(2)}`;
+                        }
+                    }
+                }
+            });
+            if (anyRunning) {
+                saveState();
+            }
+        }, 1000);
+
+        // =========================================================================
+        // 6. GESTIÓN DE INVENTARIO (BARRA Y ALMACÉN - 162 PRODUCTOS)
+        // =========================================================================
+        function populateInventoryCategoryFilter() {
+            const select = document.getElementById("inv-category-filter");
+            const currentVal = select.value;
+            const categories = [...new Set(state.products.map(p => p.category))];
+            select.innerHTML = `<option value="ALL">Todas las Categorías (${state.products.length})</option>` +
+                categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            select.value = currentVal || "ALL";
+        }
+
+        function renderInventoryTable() {
+            const tbody = document.getElementById("inventory-table-body");
+            const query = document.getElementById("inv-search-input").value.toLowerCase().trim();
+            const catFilter = document.getElementById("inv-category-filter").value;
+
+            // Actualizar KPIs globales
+            let totalBarra = 0;
+            let totalAlmacen = 0;
+            let lowStockCount = 0;
+            state.products.forEach(p => {
+                totalBarra += Number(p.stockBarra);
+                totalAlmacen += Number(p.stockAlmacen);
+                if (p.stockBarra <= 5) lowStockCount++;
+            });
+
+            document.getElementById("inv-stat-total").innerText = state.products.length;
+            document.getElementById("inv-stat-barra").innerText = totalBarra;
+            document.getElementById("inv-stat-almacen").innerText = totalAlmacen;
+            document.getElementById("inv-stat-low").innerText = lowStockCount;
+
+            const filtered = state.products.filter(p => {
+                const matchCat = catFilter === "ALL" || p.category === catFilter;
+                const matchQuery = !query || p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query);
+                return matchCat && matchQuery;
+            });
+
+            tbody.innerHTML = filtered.map(p => {
+                const isLow = p.stockBarra <= 5;
+                return `
+                    <tr class="hover:bg-slate-850/60 transition-colors ${isLow ? 'bg-rose-950/10' : ''}">
+                        <td class="py-2.5 px-4 font-mono text-xs text-slate-500">${p.id}</td>
+                        <td class="py-2.5 px-4">
+                            <div class="font-semibold text-slate-100 text-xs sm:text-sm">${p.name}</div>
+                            ${isLow ? `<span class="inline-block text-[10px] font-bold text-rose-400">⚠ Stock bajo en Barra</span>` : ''}
+                        </td>
+                        <td class="py-2.5 px-4">
+                            <span class="text-[11px] font-bold bg-slate-800 text-slate-300 px-2 py-1 rounded-lg">${p.category}</span>
+                        </td>
+                        <td class="py-2.5 px-4 text-right">
+                            <div class="inline-flex items-center bg-slate-950 border border-slate-700 rounded-lg px-2 py-1">
+                                <span class="text-emerald-400 font-mono text-xs mr-1">$</span>
+                                <input type="number" step="0.01" min="0" value="${p.price.toFixed(2)}" onchange="updateProductField(${p.id}, 'price', this.value)" class="w-16 bg-transparent text-right font-mono text-xs font-bold text-white focus:outline-none">
+                            </div>
+                        </td>
+                        <td class="py-2.5 px-4 text-center">
+                            <input type="number" min="0" value="${p.stockBarra}" onchange="updateProductField(${p.id}, 'stockBarra', this.value)" class="w-16 bg-slate-950 border ${isLow ? 'border-rose-500 text-rose-300' : 'border-slate-700 text-emerald-400'} rounded-lg px-2 py-1 text-center font-mono text-xs font-bold focus:outline-none">
+                        </td>
+                        <td class="py-2.5 px-4 text-center">
+                            <input type="number" min="0" value="${p.stockAlmacen}" onchange="updateProductField(${p.id}, 'stockAlmacen', this.value)" class="w-16 bg-slate-950 border border-slate-700 text-amber-400 rounded-lg px-2 py-1 text-center font-mono text-xs font-bold focus:outline-none">
+                        </td>
+                        <td class="py-2.5 px-4 text-center">
+                            <div class="inline-flex items-center gap-1">
+                                <button onclick="transferStock(${p.id}, 1)" title="Mover 1 unidad a Barra" class="px-2 py-1 bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white rounded-lg text-[11px] font-mono font-bold transition-colors">+1</button>
+                                <button onclick="transferStock(${p.id}, 12)" title="Mover 12 unidades a Barra" class="px-2 py-1 bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white rounded-lg text-[11px] font-mono font-bold transition-colors">+12</button>
+                                <button onclick="transferStock(${p.id}, 24)" title="Mover 1 Caja (24) a Barra" class="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/30 rounded-lg text-[11px] font-mono font-bold transition-colors">+24</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateProductField(productId, field, value) {
+            const prod = state.products.find(p => p.id === productId);
+            if (!prod) return;
+            const num = parseFloat(value);
+            if (isNaN(num) || num < 0) return;
+
+            prod[field] = field === 'price' ? Math.round(num * 100) / 100 : Math.floor(num);
+            saveState();
+            renderInventoryTable();
+            showToast(`Actualizado: ${prod.name}`, "success");
+        }
+
+        function transferStock(productId, qty) {
+            const prod = state.products.find(p => p.id === productId);
+            if (!prod) return;
+
+            if (prod.stockAlmacen <= 0) {
+                showToast("No hay existencias disponibles en Almacén", "warning");
+                return;
+            }
+
+            const moved = Math.min(qty, prod.stockAlmacen);
+            prod.stockAlmacen -= moved;
+            prod.stockBarra += moved;
+            saveState();
+            renderInventoryTable();
+            showToast(`Transferidas ${moved} uds de Almacén a Barra (${prod.name})`, "success");
+        }
+
+        function openAddProductModal() {
+            const select = document.getElementById("new-prod-category");
+            const categories = [...new Set(state.products.map(p => p.category))];
+            select.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById("modal-add-product").classList.remove("hidden");
+            document.getElementById("modal-add-product").classList.add("flex");
+        }
+
+        function closeAddProductModal() {
+            document.getElementById("modal-add-product").classList.add("hidden");
+            document.getElementById("modal-add-product").classList.remove("flex");
+        }
+
+        function saveNewProduct(e) {
+            e.preventDefault();
+            const name = document.getElementById("new-prod-name").value.trim().toUpperCase();
+            const category = document.getElementById("new-prod-category").value;
+            const price = parseFloat(document.getElementById("new-prod-price").value) || 0;
+            const stockBarra = parseInt(document.getElementById("new-prod-barra").value) || 0;
+            const stockAlmacen = parseInt(document.getElementById("new-prod-almacen").value) || 0;
+
+            const maxId = state.products.reduce((max, p) => Math.max(max, p.id), 0);
+            state.products.push({
+                id: maxId + 1,
+                name,
+                category,
+                price,
+                stockBarra,
+                stockAlmacen
+            });
+
+            saveState();
+            closeAddProductModal();
+            populateInventoryCategoryFilter();
+            renderInventoryTable();
+            showToast(`Producto "${name}" agregado al inventario`, "success");
+            e.target.reset();
+        }
+
+        function exportInventoryCSV() {
+            const headers = ["ID", "PRODUCTO", "CATEGORIA", "PRECIO_USD", "STOCK_BARRA", "STOCK_ALMACEN", "STOCK_TOTAL"];
+            const rows = state.products.map(p => [
+                p.id,
+                `"${p.name.replace(/"/g, '""')}"`,
+                `"${p.category}"`,
+                p.price.toFixed(2),
+                p.stockBarra,
+                p.stockAlmacen,
+                p.stockBarra + p.stockAlmacen
+            ]);
+
+            const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `Inventario_CountryPool_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+            showToast("Inventario exportado en CSV / Excel", "success");
+        }
+
+        // =========================================================================
+        // 7. HISTORIAL DE VENTAS, TICKET IMPRIMIBLE Y RESPALDO JSON
+        // =========================================================================
+        function renderSalesHistory() {
+            const totalUsd = state.salesHistory.reduce((sum, s) => sum + s.totalUsd, 0);
+            const totalBs = state.salesHistory.reduce((sum, s) => sum + s.totalBs, 0);
+
+            document.getElementById("sales-total-usd").innerText = `$${totalUsd.toFixed(2)}`;
+            document.getElementById("sales-total-bs").innerText = `Bs. ${totalBs.toFixed(2)}`;
+            document.getElementById("sales-total-count").innerText = state.salesHistory.length;
+
+            const list = document.getElementById("sales-history-list");
+            if (state.salesHistory.length === 0) {
+                list.innerHTML = `
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center text-slate-400">
+                        <p class="text-sm font-semibold">Aún no hay ventas cerradas registradas en esta sesión.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = state.salesHistory.map((sale, idx) => `
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-extrabold text-emerald-400 text-sm">${sale.id}</span>
+                            <span class="text-xs font-bold bg-slate-800 text-white px-2.5 py-0.5 rounded-lg">${sale.table}</span>
+                            <span class="text-xs text-slate-400">${sale.date}</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Método: <strong class="text-slate-200">${sale.paymentMethod}</strong> &bull; ${sale.items.length} línea(s) de consumo
+                        </p>
+                    </div>
+                    <div class="flex items-center justify-between sm:justify-end gap-4">
+                        <div class="text-right">
+                            <div class="font-mono font-extrabold text-lg text-emerald-400">$${sale.totalUsd.toFixed(2)}</div>
+                            <div class="font-mono text-xs text-amber-400">Bs. ${sale.totalBs.toFixed(2)}</div>
+                        </div>
+                        <button onclick='openTicketModal(state.salesHistory[${idx}], false)' class="p-2.5 bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white rounded-xl transition-colors" title="Ver e Imprimir Ticket">
+                            <i data-lucide="printer" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function openTicketModal(sale, isPreCheck) {
+            document.getElementById("ticket-meta").innerHTML = `
+                <div><strong>DOCUMENTO:</strong> ${sale.id}</div>
+                <div><strong>MESA:</strong> ${sale.table}</div>
+                <div><strong>FECHA:</strong> ${sale.date}</div>
+                <div><strong>PAGO:</strong> ${sale.paymentMethod}</div>
+            `;
+
+            document.getElementById("ticket-items").innerHTML = sale.items.map(i => `
+                <div class="flex justify-between gap-2">
+                    <span class="truncate">${i.qty}x ${i.name}</span>
+                    <span class="whitespace-nowrap">$${(i.price * i.qty).toFixed(2)}</span>
+                </div>
+            `).join('');
+
+            document.getElementById("ticket-totals").innerHTML = `
+                <div class="text-sm">TOTAL USD: $${sale.totalUsd.toFixed(2)}</div>
+                <div class="text-xs">TASA: Bs. ${sale.rate.toFixed(2)}/$</div>
+                <div class="text-sm">TOTAL BS: Bs. ${sale.totalBs.toFixed(2)}</div>
+            `;
+
+            document.getElementById("modal-ticket").classList.remove("hidden");
+            document.getElementById("modal-ticket").classList.add("flex");
+        }
+
+        function closeTicketModal() {
+            document.getElementById("modal-ticket").classList.add("hidden");
+            document.getElementById("modal-ticket").classList.remove("flex");
+        }
+
+        function backupDataJSON() {
+            const dataStr = JSON.stringify(state, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `Respaldo_CountryPool_${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Respaldo JSON descargado", "success");
+        }
+
+        function restoreDataJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported && Array.isArray(imported.products)) {
+                        state = imported;
+                        saveState();
+                        location.reload();
+                    } else {
+                        showToast("Archivo JSON inválido", "error");
+                    }
+                } catch (err) {
+                    showToast("Error al leer archivo JSON", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function openResetConfirmModal() {
+            openConfirmModal(
+                "Reiniciar Sistema de Fábrica",
+                "Esto restaurará los 162 productos originales, borrará el historial de ventas y vaciará todas las mesas. ¿Deseas continuar?",
+                () => {
+                    localStorage.removeItem(STORAGE_KEY);
+                    initDefaultState();
+                    location.reload();
+                }
+            );
+        }
+
+        // Modal de Confirmación Reutilizable
+        let pendingConfirmCallback = null;
+        function openConfirmModal(title, message, onConfirm) {
+            document.getElementById("confirm-title").innerText = title;
+            document.getElementById("confirm-message").innerText = message;
+            pendingConfirmCallback = onConfirm;
+            document.getElementById("modal-confirm").classList.remove("hidden");
+            document.getElementById("modal-confirm").classList.add("flex");
+        }
+
+        function closeConfirmModal() {
+            document.getElementById("modal-confirm").classList.add("hidden");
+            document.getElementById("modal-confirm").classList.remove("flex");
+            pendingConfirmCallback = null;
+        }
+
+        document.getElementById("confirm-action-btn").addEventListener("click", () => {
+            if (pendingConfirmCallback) pendingConfirmCallback();
+            closeConfirmModal();
+        });
+
+        // =========================================================================
+        // 8. INICIALIZACIÓN AL CARGAR EL ARCHIVO
+        // =========================================================================
+        window.onload = function () {
+            loadState();
+            document.getElementById("exchange-rate-input").value = state.exchangeRate.toFixed(2);
+            renderTablesSelector();
+            renderCategoryPills();
+            renderPosCatalog();
+            renderCart();
+            renderBilliardTables();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
